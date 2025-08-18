@@ -142,9 +142,14 @@ function Dashboard() {
       setTables(res.tables);
       setSettings(newSettings);
       setModal(null);
+       toast({
+        title: "Налаштування збережено",
+        description: "Успішно підключено до бази даних.",
+      });
     } catch (e: any) {
       const errorMessage = e.message || "Не вдалося підключитись";
       setConn({ status: "error", message: errorMessage });
+      setSettings(newSettings); // все одно зберігаємо, щоб користувач бачив що ввів
       toast({
           variant: "destructive",
           title: "Помилка підключення",
