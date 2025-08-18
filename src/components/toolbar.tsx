@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import type { SortState } from "@/lib/types";
-import { Beaker, Code, Plus, Settings, SlidersHorizontal, Trash2 } from "lucide-react";
+import { Beaker, Code, Plus, Settings, SlidersHorizontal, Trash2, Upload } from "lucide-react";
 
 type ToolbarProps = {
   query: string;
@@ -20,6 +20,7 @@ type ToolbarProps = {
   setSort: (sort: SortState) => void;
   selectedIds: string[];
   onAddNew: () => void;
+  onBulkAdd: () => void;
   onBulkActions: () => void;
   onSelectAll: () => void;
   onClearSelection: () => void;
@@ -34,7 +35,7 @@ export function Toolbar({
   categoryFilter, setCategoryFilter, categoryNames,
   statusFilter, setStatusFilter, statuses,
   sort, setSort,
-  selectedIds, onAddNew, onBulkActions,
+  selectedIds, onAddNew, onBulkAdd, onBulkActions,
   openSettings, openSqlRunner, openDevTests
 }: ToolbarProps) {
   return (
@@ -102,6 +103,7 @@ export function Toolbar({
         )}
 
         <div className="ml-auto flex items-center gap-2">
+            <Button variant="outline" onClick={onBulkAdd}><Upload className="mr-2 h-4 w-4"/> Масове додавання</Button>
             <Button onClick={onAddNew}><Plus className="mr-2 h-4 w-4"/> Додати товар</Button>
         </div>
       </div>

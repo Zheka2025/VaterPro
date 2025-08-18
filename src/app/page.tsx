@@ -11,6 +11,7 @@ import { ProductDrawer } from "@/components/product-drawer";
 import { ProductModal } from "@/components/modals/product-modal";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
 import { BulkActionsModal } from "@/components/modals/bulk-actions-modal";
+import { BulkAddModal } from "@/components/modals/bulk-add-modal";
 import { DevTestsModal } from "@/components/modals/dev-tests-modal";
 import { SettingsModal } from "@/components/modals/settings-modal";
 import { SqlRunnerModal } from "@/components/modals/sql-runner-modal";
@@ -101,6 +102,10 @@ export default function Home() {
     }
   };
 
+  const addMultipleProducts = (newProducts: Product[]) => {
+    setProducts(prev => [...newProducts, ...prev]);
+  };
+
   const deleteProducts = (ids: string[]) => {
     setProducts((prev) => prev.filter((p) => !ids.includes(p.id)));
     if (drawerProduct && ids.includes(drawerProduct.id)) {
@@ -152,6 +157,7 @@ export default function Home() {
               setSort={setSort}
               selectedIds={selectedIds}
               onAddNew={() => setModal({ mode: "edit-product", data: createBlankProduct(categories) })}
+              onBulkAdd={() => setModal({ mode: "bulk-add" })}
               onBulkActions={() => setModal({ mode: "bulk-actions" })}
               onSelectAll={handleSelectAll}
               onClearSelection={() => setSelectedIds([])}
@@ -187,8 +193,10 @@ export default function Home() {
           activeSection={activeSection}
           setActiveSection={setActiveSection}
         />
-        <main className="flex-1 flex flex-col overflow-hidden">
-          {mainContent()}
+        <main className="flex-1 flex flex-col overflow-auto">
+          <div className="w-full max-w-7xl mx-auto p-4 flex-1 flex flex-col">
+            {mainContent()}
+          </div>
         </main>
         
         {drawerProduct && (
@@ -208,6 +216,17 @@ export default function Home() {
           onSave={(p) => { upsertProduct(p); setModal(null); }}
           categories={categories}
           settings={settings}
+        />
+      )}
+
+      {modal?.mode === 'bulk-add' && (
+        <BulkAddModal
+          onClose={() => setModal(null)}
+          onSave={(newProducts) => {
+            addMultipleProducts(newProducts);
+            setModal(null);
+          }}
+          categories={categories}
         />
       )}
 
