@@ -24,7 +24,7 @@ export function ProductTable({ products, selectedIds, onSelect, onSelectAll, onV
   const isAllSelected = products.length > 0 && selectedIds.length === products.length;
 
   return (
-    <div className="flex-1 overflow-auto">
+    <main className="flex-1 overflow-auto">
       <Table>
         <TableHeader className="sticky top-0 bg-secondary z-10">
           <TableRow>
@@ -106,6 +106,6 @@ export function ProductTable({ products, selectedIds, onSelect, onSelectAll, onV
           )}
         </TableBody>
       </Table>
-    </div>
+    </main>
   );
 }
