@@ -1,3 +1,4 @@
+
 "use server";
 
 import { generateProductDescription } from '@/ai/flows/generate-product-description';
@@ -21,10 +22,12 @@ export async function connectToDb(settings: DBSettings) {
     ok: true, 
     version: "MySQL 8.0 (demo)", 
     tables: [
+      { name: "banner", label: "Banner" },
+      { name: "brand", label: "Бренд" },
+      { name: "brand_categories", label: "Категорії бренду" },
+      { name: "category", label: "Категорія" },
       { name: "product", label: "Товари" },
-      { name: "category", label: "Категорії" },
-      { name: "brand", label: "Бренди" },
-      { name: "order", label: "Замовлення" },
+      { name: "promotional_product", label: "Промо-товари" },
     ] 
   };
 }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Box, Package, Settings, Database, Tag } from "lucide-react";
@@ -56,7 +57,7 @@ export function DashboardSidebar({ connection, tables, activeSection, setActiveS
         <SidebarGroup>
             <SidebarGroupLabel>Таблиці БД</SidebarGroupLabel>
             <SidebarMenu>
-            {(tables.length ? tables : [{ name: "product", label: "Товари" }, { name: "category", label: "Категорії" }]).map((table) => (
+            {tables.map((table) => (
                 <SidebarMenuItem key={table.name}>
                     <SidebarMenuButton variant="ghost" className="h-8 justify-start" tooltip={table.label}>
                         <Database size={16} className="text-muted-foreground"/>
