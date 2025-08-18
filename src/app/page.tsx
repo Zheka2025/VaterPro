@@ -11,7 +11,6 @@ import { ProductDrawer } from "@/components/product-drawer";
 import { ProductModal } from "@/components/modals/product-modal";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
 import { BulkActionsModal } from "@/components/modals/bulk-actions-modal";
-import { BulkAddModal } from "@/components/modals/bulk-add-modal";
 import { DevTestsModal } from "@/components/modals/dev-tests-modal";
 import { SettingsModal } from "@/components/modals/settings-modal";
 import { SqlRunnerModal } from "@/components/modals/sql-runner-modal";
@@ -172,7 +171,6 @@ function Dashboard() {
               setSort={setSort}
               selectedIds={selectedIds}
               onAddNew={() => setModal({ mode: "edit-product", data: createBlankProduct(categories) })}
-              onBulkAdd={() => setModal({ mode: "bulk-add" })}
               onBulkActions={() => setModal({ mode: "bulk-actions" })}
               onSelectAll={handleSelectAll}
               onClearSelection={() => setSelectedIds([])}
@@ -229,17 +227,6 @@ function Dashboard() {
           onSave={(p) => { upsertProduct(p); setModal(null); }}
           categories={categories}
           settings={settings}
-        />
-      )}
-
-      {modal?.mode === 'bulk-add' && (
-        <BulkAddModal
-          onClose={() => setModal(null)}
-          onSave={(newProducts) => {
-            addMultipleProducts(newProducts);
-            setModal(null);
-          }}
-          categories={categories}
         />
       )}
 

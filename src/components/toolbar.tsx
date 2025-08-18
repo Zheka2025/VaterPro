@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,7 +21,6 @@ type ToolbarProps = {
   setSort: (sort: SortState) => void;
   selectedIds: string[];
   onAddNew: () => void;
-  onBulkAdd: () => void;
   onBulkActions: () => void;
   onSelectAll: () => void;
   onClearSelection: () => void;
@@ -35,7 +35,7 @@ export function Toolbar({
   categoryFilter, setCategoryFilter, categoryNames,
   statusFilter, setStatusFilter, statuses,
   sort, setSort,
-  selectedIds, onAddNew, onBulkAdd, onBulkActions,
+  selectedIds, onAddNew, onBulkActions,
   openSettings, openSqlRunner, openDevTests
 }: ToolbarProps) {
   return (
@@ -103,7 +103,9 @@ export function Toolbar({
         )}
 
         <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" onClick={onBulkAdd}><Upload className="mr-2 h-4 w-4"/> Масове додавання</Button>
+            <Link href="/bulk-add">
+              <Button variant="outline"><Upload className="mr-2 h-4 w-4"/> Масове додавання</Button>
+            </Link>
             <Button onClick={onAddNew}><Plus className="mr-2 h-4 w-4"/> Додати товар</Button>
         </div>
       </div>
