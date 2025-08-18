@@ -4,7 +4,8 @@ import { generateProductDescription } from '@/ai/flows/generate-product-descript
 import { generateSql } from '@/ai/flows/generate-sql';
 import type { GenerateProductDescriptionInput } from '@/ai/schemas';
 import type { GenerateSqlInput } from '@/ai/schemas';
-import type { DBSettings } from '@/lib/types';
+import { initialProducts } from '@/lib/constants';
+import type { DBSettings, Product } from '@/lib/types';
 
 const mockDelay = (ms = 500) => new Promise((r) => setTimeout(r, ms));
 
@@ -66,4 +67,33 @@ export async function getFirebirdSuggestions(query: string) {
   const q = (query || "").toLowerCase();
   if (!q) return [];
   return corpus.filter((x) => x.toLowerCase().includes(q)).slice(0, 8);
+}
+
+
+// This is a mock function. In a real app, this would query the Interbase DB.
+export async function getProductByBarcode(barcode: string): Promise<Partial<Product> | null> {
+  await mockDelay(150);
+  // Simulate finding a product in the database
+  if (barcode === '111222333') {
+    return {
+      name: "Молоток слюсарний 500г",
+      sku: "111222333",
+      category: "Ручний інструмент", // Assuming this category exists
+      price: 250,
+      stock: 1,
+    };
+  }
+  // Simulate finding a product from the initial list for demo
+  const found = initialProducts.find(p => p.sku === barcode);
+  if (found) {
+    return {
+        name: found.name,
+        sku: found.sku,
+        category: found.category,
+        price: found.price,
+        stock: 1,
+    }
+  }
+
+  return null;
 }
