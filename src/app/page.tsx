@@ -194,9 +194,7 @@ export default function Home() {
           setActiveSection={setActiveSection}
         />
         <main className="flex-1 flex flex-col overflow-auto">
-          <div className="w-full max-w-7xl mx-auto p-4 flex-1 flex flex-col">
-            {mainContent()}
-          </div>
+          {mainContent()}
         </main>
         
         {drawerProduct && (
