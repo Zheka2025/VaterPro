@@ -18,6 +18,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  env: {
+    NEXT_PUBLIC_DB_HOST: process.env.DB_HOST,
+    NEXT_PUBLIC_DB_PORT: process.env.DB_PORT,
+    NEXT_PUBLIC_DB_USER: process.env.DB_USER,
+    NEXT_PUBLIC_DB_PASSWORD: process.env.DB_PASSWORD,
+    NEXT_PUBLIC_DB_NAME: process.env.DB_NAME,
+  }
 };
 
 export default nextConfig;

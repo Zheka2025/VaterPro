@@ -25,7 +25,14 @@ import AuthGuard from "@/components/auth-guard";
 function Dashboard() {
   const [activeSection, setActiveSection] = useState("products");
   
-  const [settings, setSettings] = useState<DBSettings>({ host: "localhost", port: 3306, username: "root", password: "", database: "demo", azureConnString: "" });
+  const [settings, setSettings] = useState<DBSettings>({ 
+    host: process.env.NEXT_PUBLIC_DB_HOST || "localhost", 
+    port: Number(process.env.NEXT_PUBLIC_DB_PORT) || 3306, 
+    username: process.env.NEXT_PUBLIC_DB_USER || "root", 
+    password: process.env.NEXT_PUBLIC_DB_PASSWORD || "", 
+    database: process.env.NEXT_PUBLIC_DB_NAME || "demo", 
+    azureConnString: "" 
+  });
   const [conn, setConn] = useState<ConnectionState>({ status: "idle", message: "" });
   const [tables, setTables] = useState<DBTable[]>([]);
 
