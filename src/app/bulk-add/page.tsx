@@ -25,6 +25,7 @@ import { initialCategories } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { getProductByBarcode, getFirebirdSuggestions } from "@/app/actions";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
 
 
 const productSchema = z.object({
@@ -99,6 +100,7 @@ function BulkAddPage() {
   const { toast } = useToast();
   const [isSubmitting, startTransition] = useTransition();
   const [barcode, setBarcode] = useState("");
+  const [autoAddEnabled, setAutoAddEnabled] = useState(true);
   const categories = initialCategories;
 
   const form = useForm<BulkAddFormValues>({
@@ -135,7 +137,7 @@ function BulkAddPage() {
   }
 
   useEffect(() => {
-    if (!barcode.trim()) return;
+    if (!barcode.trim() || !autoAddEnabled) return;
 
     const handler = setTimeout(() => {
       addProductFromBarcode(barcode);
@@ -144,7 +146,7 @@ function BulkAddPage() {
     return () => {
       clearTimeout(handler);
     };
-  }, [barcode]);
+  }, [barcode, autoAddEnabled]);
 
 
   const handleBarcodeFormSubmit = (e: React.FormEvent) => {
@@ -176,25 +178,37 @@ function BulkAddPage() {
           <CardDescription>Введіть або відскануйте штрих-код. Товар автоматично додасться до списку нижче. Спробуйте код `111222333`.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleBarcodeFormSubmit} className="flex items-end gap-2">
-            <div className="flex-grow">
-              <Label htmlFor="barcode">Штрих-код</Label>
-              <div className="relative">
-                <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input 
-                  id="barcode"
-                  placeholder="837293847293"
-                  value={barcode}
-                  onChange={(e) => setBarcode(e.target.value)}
-                  className="pl-10"
-                  disabled={isSubmitting}
-                  autoFocus
-                />
-                 {isSubmitting && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+          <div className="flex items-end gap-4">
+            <form onSubmit={handleBarcodeFormSubmit} className="flex-grow flex items-end gap-2">
+              <div className="flex-grow">
+                <Label htmlFor="barcode">Штрих-код</Label>
+                <div className="relative">
+                  <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input 
+                    id="barcode"
+                    placeholder="837293847293"
+                    value={barcode}
+                    onChange={(e) => setBarcode(e.target.value)}
+                    className="pl-10"
+                    disabled={isSubmitting}
+                    autoFocus
+                  />
+                  {isSubmitting && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                </div>
               </div>
+              <Button type="submit" disabled={isSubmitting || !barcode.trim()}>Додати</Button>
+            </form>
+            <div className="flex items-center space-x-2 pb-2">
+                <Switch 
+                  id="auto-add-switch" 
+                  checked={autoAddEnabled} 
+                  onCheckedChange={setAutoAddEnabled}
+                />
+                <Label htmlFor="auto-add-switch" className="text-sm text-muted-foreground">
+                  Автододавання
+                </Label>
             </div>
-            <Button type="submit" disabled={isSubmitting || !barcode.trim()}>Додати</Button>
-          </form>
+          </div>
         </CardContent>
       </Card>
 
