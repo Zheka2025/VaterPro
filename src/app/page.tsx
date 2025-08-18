@@ -21,8 +21,9 @@ import { useToast } from "@/hooks/use-toast";
 import type { Product, Category, ConnectionState, DBSettings, SortState, DBTable, ProductStatus } from "@/lib/types";
 import { initialProducts, initialCategories, createBlankProduct, STATUSES } from "@/lib/constants";
 import { connectToDb } from "@/app/actions";
+import AuthGuard from "@/components/auth-guard";
 
-export default function Home() {
+function Dashboard() {
   const [activeSection, setActiveSection] = useState("products");
   
   const [settings, setSettings] = useState<DBSettings>({ host: "localhost", port: 3306, username: "root", password: "", database: "demo", azureConnString: "" });
@@ -287,4 +288,11 @@ export default function Home() {
   );
 }
 
-    
+
+export default function Home() {
+  return (
+    <AuthGuard>
+      <Dashboard />
+    </AuthGuard>
+  )
+}
