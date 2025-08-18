@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import * as z from "zod";
@@ -113,26 +114,42 @@ function BulkAddPage() {
     control,
     name: "products",
   });
-
-  const handleBarcodeSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!barcode.trim() || isSubmitting) return;
+  
+  const addProductFromBarcode = async (code: string) => {
+    if (!code.trim() || isSubmitting) return;
 
     startTransition(async () => {
-        const productData = await getProductByBarcode(barcode);
+        const productData = await getProductByBarcode(code);
         
         append({
             name: productData?.name || "",
-            sku: barcode,
+            sku: code,
             category: productData?.category || categories[0]?.name || "",
             price: productData?.price || 0,
             stock: productData?.stock || 1,
-        });
+        }, { shouldFocus: false });
 
-        // Ensure new row is validated
         await trigger(`products.${fields.length}`);
         setBarcode("");
     });
+  }
+
+  useEffect(() => {
+    if (!barcode.trim()) return;
+
+    const handler = setTimeout(() => {
+      addProductFromBarcode(barcode);
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [barcode]);
+
+
+  const handleBarcodeFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    addProductFromBarcode(barcode);
   };
 
   const onSubmit = (data: BulkAddFormValues) => {
@@ -156,10 +173,10 @@ function BulkAddPage() {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Сканування штрих-коду</CardTitle>
-          <CardDescription>Введіть або відскануйте штрих-код та натисніть Enter. Товар автоматично додасться до списку нижче. Спробуйте код `111222333`.</CardDescription>
+          <CardDescription>Введіть або відскануйте штрих-код. Товар автоматично додасться до списку нижче. Спробуйте код `111222333`.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleBarcodeSubmit} className="flex items-end gap-2">
+          <form onSubmit={handleBarcodeFormSubmit} className="flex items-end gap-2">
             <div className="flex-grow">
               <Label htmlFor="barcode">Штрих-код</Label>
               <div className="relative">
@@ -171,11 +188,12 @@ function BulkAddPage() {
                   onChange={(e) => setBarcode(e.target.value)}
                   className="pl-10"
                   disabled={isSubmitting}
+                  autoFocus
                 />
                  {isSubmitting && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
               </div>
             </div>
-            <Button type="submit" disabled={isSubmitting}>Додати</Button>
+            <Button type="submit" disabled={isSubmitting || !barcode.trim()}>Додати</Button>
           </form>
         </CardContent>
       </Card>
@@ -329,3 +347,5 @@ export default function BulkAdd() {
     </AuthGuard>
   );
 }
+
+    
