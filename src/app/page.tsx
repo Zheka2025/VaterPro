@@ -16,6 +16,7 @@ import { DevTestsModal } from "@/components/modals/dev-tests-modal";
 import { SettingsModal } from "@/components/modals/settings-modal";
 import { SqlRunnerModal } from "@/components/modals/sql-runner-modal";
 import { Toolbar } from "@/components/toolbar";
+import { useToast } from "@/hooks/use-toast";
 
 import type { Product, Category, ConnectionState, DBSettings, SortState, DBTable, ProductStatus } from "@/lib/types";
 import { initialProducts, initialCategories, createBlankProduct, STATUSES } from "@/lib/constants";
@@ -41,6 +42,7 @@ export default function Home() {
   const [modal, setModal] = useState< { mode: string; data?: any } | null>(null);
 
   const isMobile = useIsMobile();
+  const { toast } = useToast();
 
   useEffect(() => {
     (async () => {
@@ -50,7 +52,13 @@ export default function Home() {
         setConn({ status: "connected", message: res.version });
         setTables(res.tables);
       } catch (e: any) {
-        setConn({ status: "error", message: e.message || "Не вдалося підключитись" });
+        const errorMessage = e.message || "Не вдалося підключитись";
+        setConn({ status: "error", message: errorMessage });
+        toast({
+          variant: "destructive",
+          title: "Помилка підключення",
+          description: errorMessage,
+        });
       }
     })();
   }, []);
@@ -135,7 +143,13 @@ export default function Home() {
       setSettings(newSettings);
       setModal(null);
     } catch (e: any) {
-      setConn({ status: "error", message: e.message || "Не вдалося підключитись" });
+      const errorMessage = e.message || "Не вдалося підключитись";
+      setConn({ status: "error", message: errorMessage });
+      toast({
+          variant: "destructive",
+          title: "Помилка підключення",
+          description: errorMessage,
+      });
     }
   };
 
@@ -272,3 +286,5 @@ export default function Home() {
     </SidebarProvider>
   );
 }
+
+    
