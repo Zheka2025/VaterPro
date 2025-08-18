@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Box, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -21,13 +21,21 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      // Append a dummy domain to the username to use it as an email
+      const email = `${username}@shopadmin.pro`;
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/');
     } catch (error: any) {
+      let errorMessage = "Не вдалося увійти. Перевірте логін та пароль.";
+      if (error.code === 'auth/invalid-email') {
+          errorMessage = "Невірний формат логіну."
+      } else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+          errorMessage = "Невірний логін або пароль."
+      }
       toast({
         variant: "destructive",
         title: "Помилка входу",
-        description: error.message,
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -44,18 +52,18 @@ export default function LoginPage() {
                 </div>
             </div>
           <h1 className="text-3xl font-bold">Вхід в ShopAdminPro</h1>
-          <p className="text-muted-foreground">Введіть ваші дані для входу</p>
+          <p className="text-muted-foreground">Введіть ваш логін та пароль для входу</p>
         </div>
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Ел. пошта</Label>
+            <Label htmlFor="username">Логін</Label>
             <Input
-              id="email"
-              type="email"
-              placeholder="admin@example.com"
+              id="username"
+              type="text"
+              placeholder="admin"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
           </div>
           <div className="space-y-2">
