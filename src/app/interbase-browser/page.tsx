@@ -9,10 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Barcode, Loader2, PlusCircle, ServerCrash } from "lucide-react";
+import { ArrowLeft, Barcode, Loader2, PlusCircle, ServerCrash, Terminal } from "lucide-react";
 import { getProductFromInterbase } from "@/app/actions";
 import type { InterbaseProduct } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 
 function InterbaseBrowserPage() {
@@ -21,19 +22,26 @@ function InterbaseBrowserPage() {
   const [isSearching, startSearchTransition] = useTransition();
   const [barcode, setBarcode] = useState("");
   const [foundProducts, setFoundProducts] = useState<InterbaseProduct[]>([]);
+  const [logs, setLogs] = useState<string[]>(["Ініціалізація..."]);
   const [error, setError] = useState<string | null>(null);
+
+  const addLog = (message: string) => {
+    setLogs(prev => [message, ...prev]);
+  }
 
   const handleSearch = () => {
     if (!barcode.trim()) return;
     setError(null);
+    addLog(`Пошук штрих-коду: ${barcode}...`);
     startSearchTransition(async () => {
       try {
         const product = await getProductFromInterbase(barcode);
         if (product) {
-          // Avoid adding duplicates
+          addLog(`Знайдено: ${product.NAME} (Ціна: ${product.PRC}, Залишок: ${product.REM_KOL})`);
           if (!foundProducts.some(p => p.ID === product.ID)) {
              setFoundProducts(prev => [product, ...prev]);
           } else {
+             addLog(`Помилка: Товар з штрих-кодом ${barcode} вже є у списку.`);
              toast({
               variant: "default",
               title: "Товар вже у списку",
@@ -41,6 +49,7 @@ function InterbaseBrowserPage() {
             });
           }
         } else {
+          addLog(`Товар з штрих-кодом ${barcode} не знайдено.`);
           toast({
             variant: "destructive",
             title: "Товар не знайдено",
@@ -50,7 +59,9 @@ function InterbaseBrowserPage() {
         setBarcode(""); // Clear input after search
       } catch (e: any) {
         console.error("Failed to search in Interbase:", e);
-        setError("Не вдалося виконати пошук в базі. Перевірте консоль для деталей.");
+        const errorMessage = "Не вдалося виконати пошук в базі. Перевірте консоль для деталей.";
+        setError(errorMessage);
+        addLog(`Помилка: ${errorMessage}`);
         toast({
             variant: "destructive",
             title: "Помилка доступу до бази",
@@ -70,6 +81,7 @@ function InterbaseBrowserPage() {
           title: "Функціонал у розробці",
           description: `Товар '${product.NAME}' буде додаватися до основної бази даних MySQL.`
       });
+      addLog(`(Симуляція) Додавання товару '${product.NAME}' до бази MySQL.`);
   }
 
   return (
@@ -118,49 +130,69 @@ function InterbaseBrowserPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Знайдені товари</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID (Штрих-код)</TableHead>
-                  <TableHead>Назва (NAME)</TableHead>
-                  <TableHead>Ціна (PRC)</TableHead>
-                  <TableHead>Залишок (REM_KOL)</TableHead>
-                  <TableHead className="w-[100px] text-right">Дії</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {foundProducts.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
-                      {isSearching ? <Loader2 className="mx-auto h-6 w-6 animate-spin" /> : "Список порожній. Відскануйте штрих-код, щоб знайти товар."}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  foundProducts.map((product) => (
-                    <TableRow key={product.ID}>
-                      <TableCell className="font-mono">{product.ID}</TableCell>
-                      <TableCell className="font-medium">{product.NAME}</TableCell>
-                      <TableCell>{product.PRC}</TableCell>
-                      <TableCell>{product.REM_KOL}</TableCell>
-                      <TableCell className="text-right">
-                        <Button size="sm" variant="outline" onClick={() => handleAddToMysql(product)}>
-                            <PlusCircle className="mr-2 h-4 w-4"/> Додати
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2">
+            <Card>
+                <CardHeader>
+                <CardTitle>Знайдені товари</CardTitle>
+                </CardHeader>
+                <CardContent>
+                <div className="overflow-x-auto">
+                    <Table>
+                    <TableHeader>
+                        <TableRow>
+                        <TableHead>ID (Штрих-код)</TableHead>
+                        <TableHead>Назва (NAME)</TableHead>
+                        <TableHead>Ціна (PRC)</TableHead>
+                        <TableHead>Залишок (REM_KOL)</TableHead>
+                        <TableHead className="w-[100px] text-right">Дії</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {foundProducts.length === 0 ? (
+                        <TableRow>
+                            <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
+                            {isSearching ? <Loader2 className="mx-auto h-6 w-6 animate-spin" /> : "Список порожній. Відскануйте штрих-код, щоб знайти товар."}
+                            </TableCell>
+                        </TableRow>
+                        ) : (
+                        foundProducts.map((product) => (
+                            <TableRow key={product.ID}>
+                            <TableCell className="font-mono">{product.ID}</TableCell>
+                            <TableCell className="font-medium">{product.NAME}</TableCell>
+                            <TableCell>{product.PRC}</TableCell>
+                            <TableCell>{product.REM_KOL}</TableCell>
+                            <TableCell className="text-right">
+                                <Button size="sm" variant="outline" onClick={() => handleAddToMysql(product)}>
+                                    <PlusCircle className="mr-2 h-4 w-4"/> Додати
+                                </Button>
+                            </TableCell>
+                            </TableRow>
+                        ))
+                        )}
+                    </TableBody>
+                    </Table>
+                </div>
+                </CardContent>
+            </Card>
+        </div>
+        <div>
+            <Card className="h-full">
+                <CardHeader className="flex flex-row items-center gap-2">
+                    <Terminal className="h-5 w-5 text-muted-foreground"/>
+                    <CardTitle>Логи симуляції</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="bg-muted/50 rounded-lg p-3 h-96 overflow-y-auto flex flex-col-reverse">
+                       <pre className="text-xs whitespace-pre-wrap font-mono">
+                         {logs.map((log, i) => <div key={i}>{log}</div>)}
+                       </pre>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+      </div>
+
     </div>
   );
 }
