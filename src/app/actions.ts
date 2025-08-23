@@ -103,25 +103,21 @@ export async function getProductByBarcode(barcode: string): Promise<Partial<Prod
 }
 
 /**
- * SIMULATED function to get a product from the Interbase GDB file.
- * In a real application, you would replace this with actual database connection logic
- * using the 'node-firebird' package.
+ * Get a product from the Interbase GDB file.
+ * This function contains the REAL code to connect to Firebird.
+ * You need to uncomment it and provide the correct path to your SKLAD.GDB file.
  */
 export async function getProductFromInterbase(barcode: string): Promise<InterbaseProduct | null> {
-  await mockDelay(400);
-
-  // This is a simulation.
-  // In a real scenario, you would connect to SKLAD.GDB here.
-  console.log(`[SIMULATION] Searching for barcode ${barcode} in SKLAD.GDB`);
-
-  // Example of how you *would* use node-firebird:
+  // --- REAL FIREBIRD CONNECTION CODE ---
+  // Uncomment the block below and set the correct path to your .GDB file.
+  
   /*
   const options: firebird.Options = {};
-  options.host = '127.0.0.1';
-  options.port = 3050;
-  options.database = '/path/to/your/SKLAD.GDB'; // IMPORTANT: Use absolute path
-  options.user = 'SYSDBA';
-  options.password = 'masterkey';
+  options.host = '127.0.0.1'; // Or your server IP
+  options.port = 3050; // Default Firebird port
+  options.database = '/path/to/your/SKLAD.GDB'; // IMPORTANT: Use absolute path to your DB file
+  options.user = 'SYSDBA'; // Default user
+  options.password = 'masterkey'; // Default password
   options.lowercase_keys = false; 
   options.role = null; 
   options.pageSize = 4096; 
@@ -130,29 +126,38 @@ export async function getProductFromInterbase(barcode: string): Promise<Interbas
     firebird.attach(options, function(err, db) {
       if (err) {
         console.error("Firebird connection error:", err);
-        return reject(err);
+        // The error might contain sensitive info, so return a generic message
+        return reject(new Error("Failed to connect to the database. Check connection settings and if the Firebird server is running."));
       }
 
+      // Query the TOVAR table for a product with the given ID (barcode)
       db.query('SELECT ID, NAME, PRC, REM_KOL FROM TOVAR WHERE ID = ?', [barcode], function(err, result) {
+        db.detach(); // Always detach from the database
+        
         if (err) {
-          db.detach();
           console.error("Firebird query error:", err);
-          return reject(err);
+          return reject(new Error("Failed to execute query on the database."));
         }
         
-        db.detach();
         if (result && result.length > 0) {
-           // Assuming result is like [{ ID: '...', NAME: '...', ... }]
-          resolve(result[0] as InterbaseProduct);
+           // Firebird driver returns data in a specific format, we need to decode it
+          const product: InterbaseProduct = {
+              ID: result[0].ID.toString(),
+              NAME: result[0].NAME.toString(),
+              PRC: parseFloat(result[0].PRC),
+              REM_KOL: parseInt(result[0].REM_KOL, 10)
+          };
+          resolve(product);
         } else {
-          resolve(null);
+          resolve(null); // No product found
         }
       });
     });
   });
   */
 
-  // --- MOCK DATA FOR DEMO ---
+  // --- MOCK DATA FOR DEMO (safe to remove when you uncomment the real code) ---
+  await mockDelay(400); // Simulate network latency
   const mockDatabase: { [key: string]: InterbaseProduct } = {
     '2000000012345': { ID: '2000000012345', NAME: 'Цвяхи будівельні 100мм (кг)', PRC: 80, REM_KOL: 50 },
     '2000000054321': { ID: '2000000054321', NAME: 'Шпаклівка фінішна Acryl-Putz 5кг', PRC: 450, REM_KOL: 15 },
