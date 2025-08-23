@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -222,14 +223,12 @@ function Dashboard() {
           {mainContent()}
         </main>
         
-        {drawerProduct && (
-          <ProductDrawer
-            product={drawerProduct}
-            onClose={() => setDrawerProduct(null)}
-            onEdit={(p) => { setDrawerProduct(null); setModal({ mode: "edit-product", data: p }); }}
-            onDelete={(p) => { setDrawerProduct(null); setModal({ mode: "delete-product", data: p }); }}
-          />
-        )}
+        <ProductDrawer
+          product={drawerProduct}
+          onClose={() => setDrawerProduct(null)}
+          onEdit={(p) => { setDrawerProduct(null); setModal({ mode: "edit-product", data: p }); }}
+          onDelete={(p) => { setDrawerProduct(null); setModal({ mode: "delete-product", data: p }); }}
+        />
       </div>
 
       {modal?.mode === 'edit-product' && (

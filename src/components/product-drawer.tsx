@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -10,7 +11,7 @@ import type { Product } from "@/lib/types";
 import { FilePenLine, Trash2 } from "lucide-react";
 
 type Props = {
-  product: Product;
+  product: Product | null;
   onClose: () => void;
   onEdit: (product: Product) => void;
   onDelete: (product: Product) => void;
@@ -24,6 +25,8 @@ const DetailField = ({ label, value }: { label: string; value: React.ReactNode }
 );
 
 export function ProductDrawer({ product, onClose, onEdit, onDelete }: Props) {
+  if (!product) return null;
+
   return (
     <Sheet open={!!product} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="w-[440px] sm:w-[540px] flex flex-col">
