@@ -1,10 +1,13 @@
 
 "use client";
 
-import { Box, Package, Settings, Database, Tag } from "lucide-react";
-import { Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel } from "@/components/ui/sidebar";
+import { Box, Package, Settings, Database, Tag, LogOut } from "lucide-react";
+import { Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarFooter } from "@/components/ui/sidebar";
 import { ConnStatusIndicator } from "@/components/conn-status-indicator";
 import type { ConnectionState, DBTable } from "@/lib/types";
+import { auth } from "@/lib/firebase";
+import { signOut } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 type Props = {
   connection: ConnectionState;
@@ -14,6 +17,17 @@ type Props = {
 };
 
 export function DashboardSidebar({ connection, tables, activeSection, setActiveSection }: Props) {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push('/login');
+    } catch (error) {
+      console.error("Logout error", error);
+    }
+  };
+
   return (
     <Sidebar side="left" collapsible="icon" className="border-r">
       <SidebarHeader className="p-4">
@@ -68,6 +82,16 @@ export function DashboardSidebar({ connection, tables, activeSection, setActiveS
             </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleLogout} tooltip="Вийти">
+                    <LogOut />
+                    <span>Вийти</span>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
