@@ -33,15 +33,21 @@ function InterbaseBrowserPage() {
     if (!barcode.trim()) return;
     setError(null);
     addLog(`Пошук штрих-коду: ${barcode}...`);
+    console.log(`[BROWSER LOG] Starting search for barcode: ${barcode}`);
+
     startSearchTransition(async () => {
       try {
         const product = await getProductFromInterbase(barcode);
+        console.log("[BROWSER LOG] Received response from server:", product);
+
         if (product) {
           addLog(`Знайдено: ${product.NAME} (Ціна: ${product.PRC}, Залишок: ${product.REM_KOL})`);
           if (!foundProducts.some(p => p.ID === product.ID)) {
              setFoundProducts(prev => [product, ...prev]);
           } else {
-             addLog(`Помилка: Товар з штрих-кодом ${barcode} вже є у списку.`);
+             const message = `Помилка: Товар з штрих-кодом ${barcode} вже є у списку.`;
+             addLog(message);
+             console.warn(`[BROWSER LOG] ${message}`);
              toast({
               variant: "default",
               title: "Товар вже у списку",
@@ -49,7 +55,9 @@ function InterbaseBrowserPage() {
             });
           }
         } else {
-          addLog(`Товар з штрих-кодом ${barcode} не знайдено.`);
+          const message = `Товар з штрих-кодом ${barcode} не знайдено.`;
+          addLog(message);
+          console.log(`[BROWSER LOG] ${message}`);
           toast({
             variant: "destructive",
             title: "Товар не знайдено",
@@ -58,7 +66,7 @@ function InterbaseBrowserPage() {
         }
         setBarcode(""); // Clear input after search
       } catch (e: any) {
-        console.error("Failed to search in Interbase:", e);
+        console.error("[BROWSER LOG] Failed to search in Interbase:", e);
         const errorMessage = "Не вдалося виконати пошук в базі. Перевірте, чи запущено Firebird сервер, чи правильний шлях до файлу бази даних, а також логін та пароль.";
         setError(errorMessage);
         addLog(`Помилка: ${errorMessage}`);
