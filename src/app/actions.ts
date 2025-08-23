@@ -6,7 +6,7 @@ import { generateSql } from '@/ai/flows/generate-sql';
 import type { GenerateProductDescriptionInput } from '@/ai/schemas';
 import type { GenerateSqlInput } from '@/ai/schemas';
 import { initialProducts } from '@/lib/constants';
-import type { DBSettings, Product } from '@/lib/types';
+import type { DBSettings, Product, InterbaseProduct } from '@/lib/types';
 
 const mockDelay = (ms = 500) => new Promise((r) => setTimeout(r, ms));
 
@@ -96,6 +96,70 @@ export async function getProductByBarcode(barcode: string): Promise<Partial<Prod
         price: found.price,
         stock: 1,
     }
+  }
+
+  return null;
+}
+
+/**
+ * SIMULATED function to get a product from the Interbase GDB file.
+ * In a real application, you would replace this with actual database connection logic
+ * using the 'node-firebird' package.
+ */
+export async function getProductFromInterbase(barcode: string): Promise<InterbaseProduct | null> {
+  await mockDelay(400);
+
+  // This is a simulation.
+  // In a real scenario, you would connect to SKLAD.GDB here.
+  console.log(`[SIMULATION] Searching for barcode ${barcode} in SKLAD.GDB`);
+
+  // Example of how you *would* use node-firebird:
+  /*
+  import Firebird from 'node-firebird';
+
+  const options = {};
+  options.host = '127.0.0.1';
+  options.port = 3050;
+  options.database = 'path/to/your/SKLAD.GDB'; // IMPORTANT: Use absolute path
+  options.user = 'SYSDBA';
+  options.password = 'masterkey';
+  options.lowercase_keys = false; 
+  options.role = null; 
+  options.pageSize = 4096; 
+
+  return new Promise((resolve, reject) => {
+    Firebird.attach(options, function(err, db) {
+      if (err) {
+        return reject(err);
+      }
+
+      db.query('SELECT ID, NAME, PRC, REM_KOL FROM TOVAR WHERE ID = ?', [barcode], function(err, result) {
+        if (err) {
+          db.detach();
+          return reject(err);
+        }
+        
+        db.detach();
+        if (result && result.length > 0) {
+           // Assuming result is like [{ ID: '...', NAME: '...', ... }]
+          resolve(result[0] as InterbaseProduct);
+        } else {
+          resolve(null);
+        }
+      });
+    });
+  });
+  */
+
+  // --- MOCK DATA FOR DEMO ---
+  const mockDatabase: { [key: string]: InterbaseProduct } = {
+    '2000000012345': { ID: '2000000012345', NAME: 'Цвяхи будівельні 100мм (кг)', PRC: 80, REM_KOL: 50 },
+    '2000000054321': { ID: '2000000054321', NAME: 'Шпаклівка фінішна Acryl-Putz 5кг', PRC: 450, REM_KOL: 15 },
+    '4820012345678': { ID: '4820012345678', NAME: 'Лампа LED 10W E27', PRC: 65, REM_KOL: 150 },
+  };
+
+  if (mockDatabase[barcode]) {
+    return mockDatabase[barcode];
   }
 
   return null;

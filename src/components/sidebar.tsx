@@ -1,13 +1,14 @@
 
 "use client";
 
-import { Box, Package, Settings, Database, Tag, LogOut } from "lucide-react";
+import { Box, Package, Settings, Database, Tag, LogOut, HardDrive } from "lucide-react";
 import { Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarFooter } from "@/components/ui/sidebar";
 import { ConnStatusIndicator } from "@/components/conn-status-indicator";
 import type { ConnectionState, DBTable } from "@/lib/types";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type Props = {
   connection: ConnectionState;
@@ -65,6 +66,17 @@ export function DashboardSidebar({ connection, tables, activeSection, setActiveS
               <Tag />
               <span>Категорії</span>
             </SidebarMenuButton>
+          </SidebarMenuItem>
+           <SidebarMenuItem>
+            <Link href="/interbase-browser">
+                <SidebarMenuButton
+                isActive={activeSection === "interbase"}
+                tooltip="База магазину"
+                >
+                <HardDrive />
+                <span>База магазину</span>
+                </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
         

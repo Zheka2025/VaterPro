@@ -50,3 +50,12 @@ export type SortState = {
   by: keyof Product | 'createdAt';
   dir: 'asc' | 'desc';
 };
+
+// Represents a product from the Interbase/Firebird database file (SKLAD.GDB)
+export type InterbaseProduct = {
+    ID: string;
+    NAME: string;
+    PRC: number;
+    REM_KOL: number;
+    // Add other fields from TOVAR table if needed
+};
