@@ -7,6 +7,7 @@ import type { GenerateProductDescriptionInput } from '@/ai/schemas';
 import type { GenerateSqlInput } from '@/ai/schemas';
 import { initialProducts } from '@/lib/constants';
 import type { DBSettings, Product, InterbaseProduct } from '@/lib/types';
+import * as firebird from 'node-firebird';
 
 const mockDelay = (ms = 500) => new Promise((r) => setTimeout(r, ms));
 
@@ -115,12 +116,10 @@ export async function getProductFromInterbase(barcode: string): Promise<Interbas
 
   // Example of how you *would* use node-firebird:
   /*
-  import Firebird from 'node-firebird';
-
-  const options = {};
+  const options: firebird.Options = {};
   options.host = '127.0.0.1';
   options.port = 3050;
-  options.database = 'path/to/your/SKLAD.GDB'; // IMPORTANT: Use absolute path
+  options.database = '/path/to/your/SKLAD.GDB'; // IMPORTANT: Use absolute path
   options.user = 'SYSDBA';
   options.password = 'masterkey';
   options.lowercase_keys = false; 
@@ -128,14 +127,16 @@ export async function getProductFromInterbase(barcode: string): Promise<Interbas
   options.pageSize = 4096; 
 
   return new Promise((resolve, reject) => {
-    Firebird.attach(options, function(err, db) {
+    firebird.attach(options, function(err, db) {
       if (err) {
+        console.error("Firebird connection error:", err);
         return reject(err);
       }
 
       db.query('SELECT ID, NAME, PRC, REM_KOL FROM TOVAR WHERE ID = ?', [barcode], function(err, result) {
         if (err) {
           db.detach();
+          console.error("Firebird query error:", err);
           return reject(err);
         }
         

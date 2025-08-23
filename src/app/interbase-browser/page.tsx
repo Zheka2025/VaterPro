@@ -51,6 +51,11 @@ function InterbaseBrowserPage() {
       } catch (e: any) {
         console.error("Failed to search in Interbase:", e);
         setError("Не вдалося виконати пошук в базі. Перевірте консоль для деталей.");
+        toast({
+            variant: "destructive",
+            title: "Помилка доступу до бази",
+            description: "Не вдалося виконати пошук в SKLAD.GDB. Перевірте, чи запущено Firebird сервер та чи правильний шлях до файлу.",
+        });
       }
     });
   };
@@ -101,7 +106,15 @@ function InterbaseBrowserPage() {
             </div>
             <Button type="submit" disabled={isSearching || !barcode.trim()}>Знайти</Button>
           </form>
-           {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+           {error && (
+            <div className="mt-4 p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive-foreground flex items-start gap-3">
+                <ServerCrash className="h-5 w-5 text-destructive mt-0.5"/>
+                <div>
+                    <h4 className="font-semibold">Помилка симуляції</h4>
+                    <p className="text-sm">{error}</p>
+                </div>
+            </div>
+           )}
         </CardContent>
       </Card>
 
