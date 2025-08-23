@@ -45,7 +45,7 @@ function InterbaseBrowserPage() {
           if (!foundProducts.some(p => p.ID === product.ID)) {
              setFoundProducts(prev => [product, ...prev]);
           } else {
-             const message = `Помилка: Товар з штрих-кодом ${barcode} вже є у списку.`;
+             const message = `Товар з штрих-кодом ${barcode} вже є у списку.`;
              addLog(message);
              console.warn(`[BROWSER LOG] ${message}`);
              toast({
