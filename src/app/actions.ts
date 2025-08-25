@@ -85,9 +85,9 @@ export async function getProductByBarcode(barcode: string): Promise<Partial<Prod
     
     // IMPORTANT: The table is `tovar` and the barcode field is `PRODUCT_ID`.
     // The query finds the product by its barcode.
-    // We concatenate with '' to ensure SQLite treats the parameter as TEXT, fixing issues with long numeric barcodes.
+    // We use CAST to ensure SQLite treats both the parameter and the column as TEXT.
     const product = await db.get(
-      'SELECT NAME, PRODUCT_ID FROM tovar WHERE PRODUCT_ID = ? || \'\'',
+      'SELECT NAME, PRODUCT_ID FROM tovar WHERE CAST(PRODUCT_ID as TEXT) = CAST(? as TEXT)',
        [barcode]
     );
 
