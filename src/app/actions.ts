@@ -129,7 +129,7 @@ export async function getProductsByName(nameQuery: string): Promise<Partial<Prod
     });
     
     const products = await db.all(
-      "SELECT NAME, PRODUCT_ID FROM tovar WHERE NAME LIKE ? COLLATE NOCASE LIMIT 10",
+      "SELECT NAME, PRODUCT_ID FROM tovar WHERE LOWER(NAME) LIKE LOWER(?) LIMIT 10",
        [`%${nameQuery}%`]
     );
 
