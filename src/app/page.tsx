@@ -29,9 +29,9 @@ function Dashboard() {
   const [settings, setSettings] = useState<DBSettings>({ 
     host: process.env.NEXT_PUBLIC_DB_HOST || "localhost", 
     port: Number(process.env.NEXT_PUBLIC_DB_PORT) || 3306, 
-    username: process.env.NEXT_PUBLIC_DB_USER || "root", 
-    password: process.env.NEXT_PUBLIC_DB_PASSWORD || "", 
-    database: process.env.NEXT_PUBLIC_DB_NAME || "demo", 
+    username: process.env.NEXT_PUBLIC_DB_USER || "vate", 
+    password: process.env.NEXT_PUBLIC_DB_PASSWORD || "!1205Zhekaaa", 
+    database: process.env.NEXT_PUBLIC_DB_NAME || "vate_interbase", 
     azureConnString: "" 
   });
   const [conn, setConn] = useState<ConnectionState>({ status: "idle", message: "" });
