@@ -270,7 +270,6 @@ function BulkAddPage() {
                     value={nameQuery}
                     onChange={(e) => handleNameSearch(e.target.value)}
                     className="pl-10"
-                    disabled={isNameSearching}
                   />
                   {isNameSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
               </div>
