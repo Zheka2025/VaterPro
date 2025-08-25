@@ -124,13 +124,28 @@ function BulkAddPage() {
       try {
         const productData = await getProductByBarcode(code);
         
-        append({
-            name: productData?.name || "",
-            sku: code,
-            category: productData?.category || categories[0]?.name || "",
-            price: productData?.price || 0,
-            stock: productData?.stock || 1,
-        }, { shouldFocus: false });
+        if (productData) {
+            append({
+                name: productData.name || "",
+                sku: productData.sku || code,
+                category: productData.category || categories[0]?.name || "",
+                price: productData.price || 0,
+                stock: productData.stock || 1,
+            }, { shouldFocus: false });
+        } else {
+            append({
+                name: "",
+                sku: code,
+                category: categories[0]?.name || "",
+                price: 0,
+                stock: 1,
+            }, { shouldFocus: true });
+            toast({
+              title: "Товар не знайдено",
+              description: `Товар зі штрих-кодом ${code} не знайдено в базі. Ви можете додати його як новий.`,
+            });
+        }
+
 
         await trigger(`products.${fields.length}`);
         setBarcode("");
