@@ -7,22 +7,18 @@ import type { GenerateProductDescriptionInput } from '@/ai/schemas';
 import type { GenerateSqlInput } from '@/ai/schemas';
 import { initialProducts } from '@/lib/constants';
 import type { DBSettings, Product } from '@/lib/types';
-import mysql from 'mysql2/promise';
-
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
+import path from 'path';
 
 const mockDelay = (ms = 500) => new Promise((r) => setTimeout(r, ms));
 
 export async function connectToDb(settings: DBSettings) {
   await mockDelay(600);
-  if (!settings.host || !settings.database) {
-    throw new Error("Потрібно вказати host і database");
-  }
-  if (String(settings.password || "").toLowerCase() === "bad") {
-    throw new Error("Помилка автентифікації (невірний пароль)");
-  }
+  // This is a mock function now.
   return { 
     ok: true, 
-    version: "MySQL 8.0 (demo)", 
+    version: "SQLite 3 (demo)", 
     tables: [
       { name: "banner", label: "Banner" },
       { name: "brand", label: "Бренд" },
@@ -75,32 +71,26 @@ export async function getFirebirdSuggestions(query: string) {
 }
 
 
-// This function now queries a real MySQL database.
+// This function now queries a real SQLite database file.
 export async function getProductByBarcode(barcode: string): Promise<Partial<Product> | null> {
-  const dbConfig = {
-    host: process.env.NEXT_PUBLIC_DB_HOST,
-    user: process.env.NEXT_PUBLIC_DB_USER,
-    password: process.env.NEXT_PUBLIC_DB_PASSWORD,
-    database: process.env.NEXT_PUBLIC_DB_NAME,
-    port: Number(process.env.NEXT_PUBLIC_DB_PORT),
-  };
-
-  let connection;
+  
+  let db = null;
   try {
-    connection = await mysql.createConnection(dbConfig);
+    const dbPath = path.join(process.cwd(), 'tovar.db');
+    
+    db = await open({
+      filename: dbPath,
+      driver: sqlite3.Database,
+    });
     
     // IMPORTANT: The table is `tovar` and the barcode field is `ID_tovar`.
     // The query finds the product by its barcode.
-    const [rows] = await connection.execute(
-      'SELECT `NAME`, `ID_tovar`, `PRC`, `REM_KOL` FROM `tovar` WHERE `ID_tovar` = ?',
-      [barcode]
+    const product = await db.get(
+      'SELECT NAME, ID_tovar, PRC, REM_KOL FROM tovar WHERE ID_tovar = ?',
+       [barcode]
     );
 
-    await connection.end();
-
-    const products = rows as any[];
-    if (products.length > 0) {
-      const product = products[0];
+    if (product) {
       return {
         name: product.NAME,
         sku: product.ID_tovar,
@@ -115,10 +105,11 @@ export async function getProductByBarcode(barcode: string): Promise<Partial<Prod
     return null;
   } catch (error) {
     console.error("DATABASE_ERROR:", error);
-    if (connection) {
-      await connection.end();
-    }
     // We re-throw the error to be caught by the UI layer and inform the user.
     throw new Error("Не вдалося підключитися до бази даних або виконати запит.");
+  } finally {
+      if(db) {
+          await db.close();
+      }
   }
 }

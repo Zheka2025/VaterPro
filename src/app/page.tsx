@@ -27,11 +27,11 @@ function Dashboard() {
   const [activeSection, setActiveSection] = useState("products");
   
   const [settings, setSettings] = useState<DBSettings>({ 
-    host: process.env.NEXT_PUBLIC_DB_HOST || "localhost", 
-    port: Number(process.env.NEXT_PUBLIC_DB_PORT) || 3306, 
-    username: process.env.NEXT_PUBLIC_DB_USER || "user", 
-    password: process.env.NEXT_PUBLIC_DB_PASSWORD || "!1205Zhekaaa", 
-    database: process.env.NEXT_PUBLIC_DB_NAME || "tovar", 
+    host: "", 
+    port: 0, 
+    username: "", 
+    password: "", 
+    database: "tovar.db", 
     azureConnString: "" 
   });
   const [conn, setConn] = useState<ConnectionState>({ status: "idle", message: "" });
@@ -223,12 +223,14 @@ function Dashboard() {
           {mainContent()}
         </main>
         
-        <ProductDrawer
-          product={drawerProduct}
-          onClose={() => setDrawerProduct(null)}
-          onEdit={(p) => { setDrawerProduct(null); setModal({ mode: "edit-product", data: p }); }}
-          onDelete={(p) => { setDrawerProduct(null); setModal({ mode: "delete-product", data: p }); }}
-        />
+        {drawerProduct && (
+          <ProductDrawer
+            product={drawerProduct}
+            onClose={() => setDrawerProduct(null)}
+            onEdit={(p) => { setDrawerProduct(null); setModal({ mode: "edit-product", data: p }); }}
+            onDelete={(p) => { setDrawerProduct(null); setModal({ mode: "delete-product", data: p }); }}
+          />
+        )}
       </div>
 
       {modal?.mode === 'edit-product' && (
