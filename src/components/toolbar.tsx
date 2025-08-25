@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -6,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import type { SortState } from "@/lib/types";
-import { Beaker, Code, Plus, Settings, SlidersHorizontal, Trash2, Upload } from "lucide-react";
+import { Beaker, Code, Database, Loader2, Plus, Settings, SlidersHorizontal, Trash2, Upload } from "lucide-react";
 
 type ToolbarProps = {
   query: string;
@@ -25,6 +26,7 @@ type ToolbarProps = {
   onSelectAll: () => void;
   onClearSelection: () => void;
   filteredProductCount: number;
+  totalDbProductCount: number | null;
   openSettings: () => void;
   openSqlRunner: () => void;
   openDevTests: () => void;
@@ -36,7 +38,8 @@ export function Toolbar({
   statusFilter, setStatusFilter, statuses,
   sort, setSort,
   selectedIds, onAddNew, onBulkActions,
-  openSettings, openSqlRunner, openDevTests
+  openSettings, openSqlRunner, openDevTests,
+  filteredProductCount, totalDbProductCount
 }: ToolbarProps) {
   return (
     <div className="bg-card border-b p-3 space-y-3">
@@ -63,6 +66,15 @@ export function Toolbar({
             {statuses.map((s) => (<SelectItem key={s} value={s}>{s}</SelectItem>))}
           </SelectContent>
         </Select>
+         <div className="flex items-center gap-2 text-sm text-muted-foreground ml-4">
+          <Database className="h-4 w-4" />
+          <span>У базі:</span>
+          {totalDbProductCount === null ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <span className="font-medium text-foreground">{totalDbProductCount.toLocaleString('uk-UA')}</span>
+          )}
+        </div>
         <div className="flex items-center gap-2 ml-auto">
             <Button variant="ghost" size="icon" onClick={openSqlRunner} title="SQL Runner"><Code /></Button>
             <Button variant="ghost" size="icon" onClick={openSettings} title="Налаштування"><Settings /></Button>

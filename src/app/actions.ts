@@ -114,3 +114,24 @@ export async function getProductByBarcode(barcode: string): Promise<Partial<Prod
       }
   }
 }
+
+export async function getDbProductCount(): Promise<number> {
+  let db = null;
+  try {
+    const dbPath = path.join(process.cwd(), 'tovar.db');
+    db = await open({
+      filename: dbPath,
+      driver: sqlite3.Database,
+      mode: sqlite3.OPEN_READONLY,
+    });
+    const result = await db.get('SELECT COUNT(*) as count FROM tovar');
+    return result?.count || 0;
+  } catch (error) {
+    console.error("DATABASE_COUNT_ERROR:", error);
+    return 0;
+  } finally {
+    if (db) {
+      await db.close();
+    }
+  }
+}

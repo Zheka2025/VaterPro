@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 
 import type { Product, Category, ConnectionState, DBSettings, SortState, DBTable, ProductStatus } from "@/lib/types";
 import { initialProducts, initialCategories, createBlankProduct, STATUSES } from "@/lib/constants";
-import { connectToDb } from "@/app/actions";
+import { connectToDb, getDbProductCount } from "@/app/actions";
 import AuthGuard from "@/components/auth-guard";
 
 function Dashboard() {
@@ -36,6 +36,7 @@ function Dashboard() {
   });
   const [conn, setConn] = useState<ConnectionState>({ status: "idle", message: "" });
   const [tables, setTables] = useState<DBTable[]>([]);
+  const [totalDbProducts, setTotalDbProducts] = useState<number | null>(null);
 
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
@@ -59,6 +60,10 @@ function Dashboard() {
         const res = await connectToDb(settings);
         setConn({ status: "connected", message: res.version });
         setTables(res.tables);
+        
+        const count = await getDbProductCount();
+        setTotalDbProducts(count);
+
       } catch (e: any) {
         const errorMessage = e.message || "Не вдалося підключитись";
         setConn({ status: "error", message: errorMessage });
@@ -188,6 +193,7 @@ function Dashboard() {
               onSelectAll={handleSelectAll}
               onClearSelection={() => setSelectedIds([])}
               filteredProductCount={filteredProducts.length}
+              totalDbProductCount={totalDbProducts}
               openSettings={() => setModal({mode: 'settings'})}
               openSqlRunner={() => setModal({mode: 'sql-runner'})}
               openDevTests={() => setModal({mode: 'dev-tests'})}
