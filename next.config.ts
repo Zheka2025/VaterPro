@@ -19,11 +19,11 @@ const nextConfig: NextConfig = {
     ],
   },
   env: {
-    NEXT_PUBLIC_DB_HOST: process.env.DB_HOST,
-    NEXT_PUBLIC_DB_PORT: process.env.DB_PORT,
-    NEXT_PUBLIC_DB_USER: process.env.DB_USER,
-    NEXT_PUBLIC_DB_PASSWORD: process.env.DB_PASSWORD,
-    NEXT_PUBLIC_DB_NAME: process.env.DB_NAME,
+    NEXT_PUBLIC_DB_HOST: process.env.NEXT_PUBLIC_DB_HOST,
+    NEXT_PUBLIC_DB_PORT: process.env.NEXT_PUBLIC_DB_PORT,
+    NEXT_PUBLIC_DB_USER: process.env.NEXT_PUBLIC_DB_USER,
+    NEXT_PUBLIC_DB_PASSWORD: process.env.NEXT_PUBLIC_DB_PASSWORD,
+    NEXT_PUBLIC_DB_NAME: process.env.NEXT_PUBLIC_DB_NAME,
   }
 };
 
