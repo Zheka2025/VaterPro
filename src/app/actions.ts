@@ -7,6 +7,7 @@ import type { GenerateProductDescriptionInput } from '@/ai/schemas';
 import type { GenerateSqlInput } from '@/ai/schemas';
 import { initialProducts } from '@/lib/constants';
 import type { DBSettings, Product } from '@/lib/types';
+import mysql from 'mysql2/promise';
 
 
 const mockDelay = (ms = 500) => new Promise((r) => setTimeout(r, ms));
@@ -74,41 +75,50 @@ export async function getFirebirdSuggestions(query: string) {
 }
 
 
-// This is a mock function. In a real app, this would query the MySQL `tovar` table.
+// This function now queries a real MySQL database.
 export async function getProductByBarcode(barcode: string): Promise<Partial<Product> | null> {
-  await mockDelay(150);
-
-  // In a real application, here you would connect to MySQL and query the `TOVAR` table.
-  // Example: SELECT NAME, PRC FROM TOVAR WHERE ID = ?
-  // For now, we use a mock database.
-  
-  const mockDatabase: { [key: string]: Partial<Product> } = {
-    '2000000012345': { name: 'Цвяхи будівельні 100мм (кг)', price: 80, stock: 50 },
-    '2000000054321': { name: 'Шпаклівка фінішна Acryl-Putz 5кг', price: 450, stock: 15 },
-    '4820012345678': { name: 'Лампа LED 10W E27', price: 65, stock: 150 },
-    '111222333': { name: "Молоток слюсарний 500г", category: "Ручний інструмент", price: 250, stock: 1 },
+  const dbConfig = {
+    host: process.env.NEXT_PUBLIC_DB_HOST,
+    user: process.env.NEXT_PUBLIC_DB_USER,
+    password: process.env.NEXT_PUBLIC_DB_PASSWORD,
+    database: process.env.NEXT_PUBLIC_DB_NAME,
+    port: Number(process.env.NEXT_PUBLIC_DB_PORT),
   };
 
-  const foundProduct = mockDatabase[barcode];
+  let connection;
+  try {
+    connection = await mysql.createConnection(dbConfig);
+    
+    // IMPORTANT: The table is `tovar` and the barcode field is `ID_tovar`.
+    // The query finds the product by its barcode.
+    const [rows] = await connection.execute(
+      'SELECT `NAME`, `ID_tovar`, `PRC`, `REM_KOL` FROM `tovar` WHERE `ID_tovar` = ?',
+      [barcode]
+    );
 
-  if (foundProduct) {
-    return {
-      ...foundProduct,
-      sku: barcode, // The barcode is the SKU
-    };
-  }
+    await connection.end();
 
-  // Also check initialProducts for demo purposes
-  const foundInInitial = initialProducts.find(p => p.sku === barcode);
-  if (foundInInitial) {
-    return {
-        name: foundInInitial.name,
-        sku: foundInInitial.sku,
-        category: foundInInitial.category,
-        price: foundInInitial.price,
-        stock: 1,
+    const products = rows as any[];
+    if (products.length > 0) {
+      const product = products[0];
+      return {
+        name: product.NAME,
+        sku: product.ID_tovar,
+        price: product.PRC,
+        stock: product.REM_KOL,
+        // Category will be empty for now as it's not in the tovar table.
+        // It can be assigned manually on the bulk-add page.
+        category: '', 
+      };
     }
-  }
 
-  return null;
+    return null;
+  } catch (error) {
+    console.error("DATABASE_ERROR:", error);
+    if (connection) {
+      await connection.end();
+    }
+    // We re-throw the error to be caught by the UI layer and inform the user.
+    throw new Error("Не вдалося підключитися до бази даних або виконати запит.");
+  }
 }
