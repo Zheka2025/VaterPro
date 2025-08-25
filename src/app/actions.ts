@@ -83,19 +83,19 @@ export async function getProductByBarcode(barcode: string): Promise<Partial<Prod
       driver: sqlite3.Database,
     });
     
-    // IMPORTANT: The table is `tovar` and the barcode field is `ID_tovar`.
+    // IMPORTANT: The table is `tovar` and the barcode field is `PRODUCT_ID`.
     // The query finds the product by its barcode.
     const product = await db.get(
-      'SELECT NAME, ID_tovar, PRC, REM_KOL FROM tovar WHERE ID_tovar = ?',
+      'SELECT NAME, PRODUCT_ID FROM tovar WHERE PRODUCT_ID = ?',
        [barcode]
     );
 
     if (product) {
       return {
         name: product.NAME,
-        sku: product.ID_tovar,
-        price: product.PRC,
-        stock: product.REM_KOL,
+        sku: product.PRODUCT_ID,
+        price: 0,
+        stock: 1,
         // Category will be empty for now as it's not in the tovar table.
         // It can be assigned manually on the bulk-add page.
         category: '', 
