@@ -275,7 +275,7 @@ function BulkAddPage() {
                   {isNameSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
               </div>
                {nameSearchResults.length > 0 && (
-                <div className="absolute z-20 bg-card border rounded-lg w-full mt-1 max-h-60 overflow-auto shadow-lg">
+                <div className="absolute z-20 bg-card border rounded-lg w-full mt-1 max-h-96 overflow-auto shadow-lg">
                     {nameSearchResults.map((p) => (
                     <button key={p.sku} type="button" className="w-full text-left px-3 py-2 hover:bg-muted" onClick={() => handleSelectProductFromSearch(p)}>
                         <p className="font-medium">{p.name}</p>
