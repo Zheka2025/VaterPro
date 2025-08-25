@@ -42,34 +42,20 @@ build/Release
 node_modules/
 jspm_packages/
 
-# Snowpack dependency directory (https://snowpack.dev/)
+# Snowpack dependency directory (https://www.snowpack.dev/)
 web_modules/
 
 # TypeScript cache
 *.tsbuildinfo
 
-# Optional eslint cache
-.eslintcache
-
 # Next.js build output
 .next/
 out/
 
-# Nuxt.js build output
-.nuxt/
-dist/
+# Next.js ESLint cache
+.eslintcache
 
-# Docusaurus build output
-.docusaurus
-
-# Gatsby build output
-.cache/
-public
-
-# Optional lint-staged cache
-.lintstagedrc.js
-
-# Environment variables
+# dotenv environment variables file
 .env
 .env.local
 .env.development.local
@@ -84,5 +70,5 @@ SKLAD.GDB
 *.sqlite
 *.sqlite3
 
-# VSCode settings
-.vscode/
+# DBeaver
+.dbeaver/
