@@ -115,6 +115,41 @@ export async function getProductByBarcode(barcode: string): Promise<Partial<Prod
   }
 }
 
+export async function getProductsByName(nameQuery: string): Promise<Partial<Product>[]> {
+  if (!nameQuery.trim()) {
+    return [];
+  }
+  let db = null;
+  try {
+    const dbPath = path.join(process.cwd(), 'tovar.db');
+    db = await open({
+      filename: dbPath,
+      driver: sqlite3.Database,
+      mode: sqlite3.OPEN_READONLY,
+    });
+    
+    const products = await db.all(
+      "SELECT NAME, PRODUCT_ID FROM tovar WHERE NAME LIKE ? LIMIT 10",
+       [`%${nameQuery}%`]
+    );
+
+    return products.map(product => ({
+      name: product.NAME,
+      sku: product.PRODUCT_ID,
+      price: 0,
+      stock: 1,
+      category: '',
+    }));
+  } catch (error) {
+    console.error("DATABASE_SEARCH_ERROR:", error);
+    throw new Error("Помилка пошуку товарів у базі даних.");
+  } finally {
+    if (db) {
+      await db.close();
+    }
+  }
+}
+
 export async function getDbProductCount(): Promise<number> {
   let db = null;
   try {

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import { useRouter } from 'next/navigation';
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import * as z from "zod";
@@ -19,11 +19,11 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, ArrowLeft, Barcode, Loader2, Search } from "lucide-react";
-import type { Category } from "@/lib/types";
+import { Plus, Trash2, ArrowLeft, Barcode, Loader2, Search, X } from "lucide-react";
+import type { Category, Product } from "@/lib/types";
 import { initialCategories } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
-import { getProductByBarcode, getFirebirdSuggestions } from "@/app/actions";
+import { getProductByBarcode, getFirebirdSuggestions, getProductsByName } from "@/app/actions";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 
@@ -100,6 +100,10 @@ function BulkAddPage() {
   const { toast } = useToast();
   const [isSubmitting, startTransition] = useTransition();
   const [barcode, setBarcode] = useState("");
+  const [nameQuery, setNameQuery] = useState("");
+  const [nameSearchResults, setNameSearchResults] = useState<Partial<Product>[]>([]);
+  const [isNameSearching, startNameSearchTransition] = useTransition();
+
   const [autoAddEnabled, setAutoAddEnabled] = useState(true);
   const categories = initialCategories;
 
@@ -117,6 +121,16 @@ function BulkAddPage() {
     name: "products",
   });
   
+  const addProductToList = useCallback((productData: Partial<Product>) => {
+    append({
+        name: productData.name || "",
+        sku: productData.sku || "",
+        category: productData.category || categories[0]?.name || "",
+        price: productData.price || 0,
+        stock: productData.stock || 1,
+    }, { shouldFocus: !productData.name });
+  }, [append, categories]);
+
   const addProductFromBarcode = async (code: string) => {
     if (!code.trim() || isSubmitting) return;
 
@@ -125,29 +139,14 @@ function BulkAddPage() {
         const productData = await getProductByBarcode(code);
         
         if (productData) {
-            append({
-                name: productData.name || "",
-                sku: productData.sku || code,
-                category: productData.category || categories[0]?.name || "",
-                price: productData.price || 0,
-                stock: productData.stock || 1,
-            }, { shouldFocus: false });
+            addProductToList(productData);
         } else {
-            append({
-                name: "",
-                sku: code,
-                category: categories[0]?.name || "",
-                price: 0,
-                stock: 1,
-            }, { shouldFocus: true });
+            addProductToList({ sku: code });
             toast({
               title: "Товар не знайдено",
               description: `Товар зі штрих-кодом ${code} не знайдено в базі. Ви можете додати його як новий.`,
             });
         }
-
-
-        await trigger(`products.${fields.length}`);
         setBarcode("");
       } catch (e: any) {
         console.error("Failed to fetch product by barcode:", e);
@@ -177,6 +176,32 @@ function BulkAddPage() {
     e.preventDefault();
     addProductFromBarcode(barcode);
   };
+  
+  const handleNameSearch = (query: string) => {
+    setNameQuery(query);
+    if (!query.trim() || query.length < 2) {
+        setNameSearchResults([]);
+        return;
+    }
+    startNameSearchTransition(async () => {
+        try {
+            const results = await getProductsByName(query);
+            setNameSearchResults(results);
+        } catch (e: any) {
+             toast({
+                variant: "destructive",
+                title: "Помилка пошуку",
+                description: e.message,
+            });
+        }
+    });
+  };
+
+  const handleSelectProductFromSearch = (product: Partial<Product>) => {
+    addProductToList(product);
+    setNameQuery("");
+    setNameSearchResults([]);
+  };
 
   const onSubmit = (data: BulkAddFormValues) => {
     console.log(data.products);
@@ -198,39 +223,67 @@ function BulkAddPage() {
       
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Сканування штрих-коду</CardTitle>
-          <CardDescription>Введіть або відскануйте штрих-код. Товар автоматично додасться до списку нижче. Спробуйте код `111222333`.</CardDescription>
+          <CardTitle>Додавання товару</CardTitle>
+          <CardDescription>Введіть штрих-код для автоматичного додавання або знайдіть товар за назвою. Спробуйте код `111222333`.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-end gap-4">
-            <form onSubmit={handleBarcodeFormSubmit} className="flex-grow flex items-end gap-2">
-              <div className="flex-grow">
-                <Label htmlFor="barcode">Штрих-код</Label>
-                <div className="relative">
-                  <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input 
-                    id="barcode"
-                    placeholder="837293847293"
-                    value={barcode}
-                    onChange={(e) => setBarcode(e.target.value)}
-                    className="pl-10"
-                    disabled={isSubmitting}
-                    autoFocus
-                  />
-                  {isSubmitting && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+          <div className="grid md:grid-cols-2 gap-6 items-start">
+            <div>
+              <Label htmlFor="barcode">Сканування штрих-коду</Label>
+              <div className="flex items-end gap-2">
+                <form onSubmit={handleBarcodeFormSubmit} className="flex-grow flex items-end gap-2">
+                  <div className="flex-grow">
+                    <div className="relative mt-1.5">
+                      <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input 
+                        id="barcode"
+                        placeholder="837293847293"
+                        value={barcode}
+                        onChange={(e) => setBarcode(e.target.value)}
+                        className="pl-10"
+                        disabled={isSubmitting}
+                        autoFocus
+                      />
+                      {isSubmitting && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+                    </div>
+                  </div>
+                </form>
+                <div className="flex items-center space-x-2 pb-2">
+                    <Switch 
+                      id="auto-add-switch" 
+                      checked={autoAddEnabled} 
+                      onCheckedChange={setAutoAddEnabled}
+                    />
+                    <Label htmlFor="auto-add-switch" className="text-sm text-muted-foreground">
+                      Авто
+                    </Label>
                 </div>
               </div>
-              <Button type="submit" disabled={isSubmitting || !barcode.trim()}>Додати</Button>
-            </form>
-            <div className="flex items-center space-x-2 pb-2">
-                <Switch 
-                  id="auto-add-switch" 
-                  checked={autoAddEnabled} 
-                  onCheckedChange={setAutoAddEnabled}
-                />
-                <Label htmlFor="auto-add-switch" className="text-sm text-muted-foreground">
-                  Автододавання
-                </Label>
+            </div>
+            <div className="relative">
+              <Label htmlFor="name-search">Пошук за назвою</Label>
+              <div className="relative mt-1.5">
+                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                 <Input 
+                    id="name-search"
+                    placeholder="Напр. Шуруповерт"
+                    value={nameQuery}
+                    onChange={(e) => handleNameSearch(e.target.value)}
+                    className="pl-10"
+                    disabled={isNameSearching}
+                  />
+                  {isNameSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin" />}
+              </div>
+               {nameSearchResults.length > 0 && (
+                <div className="absolute z-20 bg-card border rounded-lg w-full mt-1 max-h-60 overflow-auto shadow-lg">
+                    {nameSearchResults.map((p) => (
+                    <button key={p.sku} type="button" className="w-full text-left px-3 py-2 hover:bg-muted" onClick={() => handleSelectProductFromSearch(p)}>
+                        <p className="font-medium">{p.name}</p>
+                        <p className="text-sm text-muted-foreground">{p.sku}</p>
+                    </button>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
@@ -259,7 +312,7 @@ function BulkAddPage() {
                     {fields.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
-                          Список порожній. Відскануйте штрих-код, щоб додати товар.
+                          Список порожній. Відскануйте штрих-код або знайдіть товар за назвою.
                         </TableCell>
                       </TableRow>
                     ) : (
