@@ -121,6 +121,7 @@ function BulkAddPage() {
     if (!code.trim() || isSubmitting) return;
 
     startTransition(async () => {
+      try {
         const productData = await getProductByBarcode(code);
         
         append({
@@ -133,6 +134,14 @@ function BulkAddPage() {
 
         await trigger(`products.${fields.length}`);
         setBarcode("");
+      } catch (e: any) {
+        console.error("Failed to fetch product by barcode:", e);
+        toast({
+          variant: "destructive",
+          title: "Помилка пошуку товару",
+          description: e.message || "Не вдалося знайти товар за штрих-кодом.",
+        });
+      }
     });
   }
 
@@ -361,5 +370,3 @@ export default function BulkAdd() {
     </AuthGuard>
   );
 }
-
-    
