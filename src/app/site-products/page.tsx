@@ -1,42 +1,74 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from 'next/navigation';
+
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/sidebar";
 import AuthGuard from "@/components/auth-guard";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Database, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getSiteProducts } from "@/app/actions";
-import type { SiteProduct, DBSettings, ConnectionState, DBTable } from "@/lib/types";
-import { currency } from "@/lib/constants";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import type { SiteProduct, DBSettings, ConnectionState, DBTable, SortState, Category } from "@/lib/types";
+import { Toolbar } from "@/components/toolbar";
+import { ProductTable } from "@/components/product-table";
+import { ProductDrawer } from "@/components/product-drawer";
+import { ProductModal } from "@/components/modals/product-modal";
+import { ConfirmModal } from "@/components/modals/confirm-modal";
+import { BulkActionsModal } from "@/components/modals/bulk-actions-modal";
+import { Product } from "@/lib/types";
+import { createBlankProduct, initialCategories, STATUSES } from "@/lib/constants";
+
+// Helper function to adapt SiteProduct to the Product format used by components
+const adaptSiteProductToProduct = (siteProduct: SiteProduct): Product => ({
+    id: String(siteProduct.id),
+    name: siteProduct.name,
+    sku: String(siteProduct.id), // Assuming SKU can be the ID if not present
+    category: 'Uncategorized', // Default category
+    price: Number(siteProduct.price),
+    oldPrice: 0,
+    stock: siteProduct.stock,
+    status: siteProduct.stock > 0 ? 'Активний' : 'Вичерпано',
+    images: siteProduct.imageUrl ? [siteProduct.imageUrl] : [],
+    description: '', // Not available in SiteProduct
+    attributes: {}, // Not available in SiteProduct
+    createdAt: new Date().toISOString(), // Placeholder
+});
+
 
 function SiteProductsPage() {
     const router = useRouter();
     const { toast } = useToast();
 
-    // We need a separate state for settings as it might differ from the main page's state.
-    // Or, we can lift the state up to a shared context if needed later.
     const [settings, setSettings] = useState<DBSettings>({
-        host: "", port: 0, username: "", password: "", database: "tovar.db",
-        mysqlHost: process.env.NEXT_PUBLIC_MYSQL_HOST || "",
-        mysqlUser: process.env.NEXT_PUBLIC_MYSQL_USER || "",
-        mysqlPassword: process.env.NEXT_PUBLIC_MYSQL_PASSWORD || "",
-        mysqlDatabase: process.env.NEXT_PUBLIC_MYSQL_DATABASE || "",
+        host: "", port: 0, username: "", database: "tovar.db",
+        mysqlHost: process.env.NEXT_PUBLIC_MYSQL_HOST || "194.1.182.211",
+        mysqlUser: process.env.NEXT_PUBLIC_MYSQL_USER || "vate_vaterpas",
+        mysqlPassword: process.env.NEXT_PUBLIC_MYSQL_PASSWORD || "!1205Zhekaaa",
+        mysqlDatabase: process.env.NEXT_PUBLIC_MYSQL_DATABASE || "vate_vaterpas",
     });
 
-    const [products, setProducts] = useState<SiteProduct[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // State for UI components
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [query, setQuery] = useState("");
+    const [categoryFilter, setCategoryFilter] = useState("Всі");
+    const [statusFilter, setStatusFilter] = useState("Всі");
+    const [sort, setSort] = useState<SortState>({ by: "createdAt", dir: "desc" });
+    const [drawerProduct, setDrawerProduct] = useState<Product | null>(null);
+    const [modal, setModal] = useState< { mode: string; data?: any } | null>(null);
+     const [categories, setCategories] = useState<Category[]>(initialCategories);
 
     // Mock connection state for the sidebar
     const mockConn: ConnectionState = { status: "connected", message: "MySQL" };
     const mockTables: DBTable[] = [{ name: "product", label: "Товари" }];
+    
+    const categoryNames = useMemo(() => ["Всі", ...categories.map(c => c.name)], [categories]);
+
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -44,7 +76,7 @@ function SiteProductsPage() {
             setError(null);
             try {
                 const siteProducts = await getSiteProducts(settings);
-                setProducts(siteProducts);
+                setProducts(siteProducts.map(adaptSiteProductToProduct));
             } catch (e: any) {
                 setError(e.message || "An unknown error occurred.");
                 toast({
@@ -59,6 +91,66 @@ function SiteProductsPage() {
 
         fetchProducts();
     }, [settings, toast]);
+    
+    const filteredProducts = useMemo(() => {
+        let list = [...products];
+        if (query.trim()) {
+            const q = query.toLowerCase();
+            list = list.filter((p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
+        }
+        if (categoryFilter !== "Всі") list = list.filter((p) => p.category === categoryFilter);
+        if (statusFilter !== "Всі") list = list.filter((p) => p.status === statusFilter);
+
+        list.sort((a, b) => {
+          const dir = sort.dir === "asc" ? 1 : -1;
+          const valA = a[sort.by as keyof Product];
+          const valB = b[sort.by as keyof Product];
+          if (sort.by === "price" || sort.by === "stock") {
+            return (Number(valA) - Number(valB)) * dir;
+          }
+          return String(valA).localeCompare(String(valB)) * dir;
+        });
+        return list;
+    }, [products, query, categoryFilter, statusFilter, sort]);
+
+    const handleSelectProduct = (id: string) => {
+        setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    };
+
+    const handleSelectAll = () => {
+        if(selectedIds.length === filteredProducts.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(filteredProducts.map((p) => p.id));
+        }
+    };
+    
+    // Mock implementations for actions
+    const upsertProduct = (product: Product) => {
+        // Here you would call a server action to update the product in MySQL
+        console.log("Saving product to MySQL (simulated):", product);
+        toast({ title: "Збережено (симуляція)", description: `Товар ${product.name} оновлено.` });
+        setProducts(prev => {
+            const index = prev.findIndex(p => p.id === product.id);
+            if (index > -1) {
+                const newList = [...prev];
+                newList[index] = product;
+                return newList;
+            }
+            return [product, ...prev]; // Or handle new product case
+        });
+        setModal(null);
+    };
+
+    const deleteProducts = (ids: string[]) => {
+        // Here you would call a server action to delete products from MySQL
+        console.log("Deleting products from MySQL (simulated):", ids);
+        toast({ title: "Видалено (симуляція)", description: `Видалено ${ids.length} товар(ів).` });
+        setProducts(prev => prev.filter(p => !ids.includes(p.id)));
+        setSelectedIds([]);
+        setModal(null);
+    };
+
 
     return (
         <SidebarProvider>
@@ -66,73 +158,71 @@ function SiteProductsPage() {
                 <DashboardSidebar
                     connection={mockConn}
                     tables={mockTables}
-                    activeSection=""
+                    activeSection="site-products"
                     setActiveSection={() => {}}
                 />
                 <main className="flex-1 flex flex-col overflow-auto">
-                    <div className="container mx-auto py-8">
-                        <div className="flex items-center mb-6">
-                            <Button variant="ghost" size="icon" onClick={() => router.push('/')}>
-                                <ArrowLeft />
-                            </Button>
-                            <h1 className="text-2xl font-bold ml-2">Товари з сайту (MySQL)</h1>
-                        </div>
-
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Список товарів</CardTitle>
-                                <CardDescription>Останні 100 оновлених товарів з бази даних сайту.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {loading ? (
-                                    <div className="flex justify-center items-center h-64">
-                                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                                    </div>
-                                ) : error ? (
-                                    <div className="flex flex-col items-center justify-center h-64 text-destructive bg-destructive/10 rounded-lg">
-                                        <AlertCircle className="h-8 w-8 mb-2" />
-                                        <p className="font-semibold">Не вдалося завантажити дані</p>
-                                        <p className="text-sm">{error}</p>
-                                         <Button variant="outline" className="mt-4" onClick={() => router.push('/')}>На головну</Button>
-                                    </div>
-                                ) : (
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Зображення</TableHead>
-                                                <TableHead>Назва</TableHead>
-                                                <TableHead>Ціна</TableHead>
-                                                <TableHead>Залишок</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {products.map((p) => (
-                                                <TableRow key={p.id}>
-                                                    <TableCell>
-                                                        <Image
-                                                            src={`https://placehold.co/600x400.png?text=${p.name.charAt(0)}`}
-                                                            alt={p.name}
-                                                            width={48}
-                                                            height={48}
-                                                            className="w-12 h-12 rounded-lg object-cover border bg-card"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="font-medium">{p.name}</div>
-                                                        <div className="text-xs text-muted-foreground">ID: {p.id}</div>
-                                                    </TableCell>
-                                                    <TableCell>{currency(Number(p.price))}</TableCell>
-                                                    <TableCell>{p.stock}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </div>
+                   <Toolbar
+                      query={query}
+                      setQuery={setQuery}
+                      categoryFilter={categoryFilter}
+                      setCategoryFilter={setCategoryFilter}
+                      categoryNames={categoryNames}
+                      statusFilter={statusFilter}
+                      setStatusFilter={setStatusFilter}
+                      statuses={["Всі", ...STATUSES]}
+                      sort={sort}
+                      setSort={setSort}
+                      selectedIds={selectedIds}
+                      onAddNew={() => setModal({ mode: "edit-product", data: createBlankProduct(categories) })}
+                      onBulkActions={() => alert("Масові дії для товарів сайту ще не реалізовано.")}
+                      onSelectAll={handleSelectAll}
+                      onClearSelection={() => setSelectedIds([])}
+                      filteredProductCount={filteredProducts.length}
+                      totalDbProductCount={products.length}
+                      openSettings={() => alert("Налаштування тут недоступні")}
+                      openSqlRunner={() => alert("SQL Runner тут недоступний")}
+                      openDevTests={() => alert("Dev Tests тут недоступні")}
+                    />
+                    <ProductTable
+                      products={filteredProducts}
+                      selectedIds={selectedIds}
+                      onSelect={handleSelectProduct}
+                      onSelectAll={handleSelectAll}
+                      onView={(p) => setDrawerProduct(p)}
+                      onEdit={(p) => setModal({ mode: "edit-product", data: p })}
+                      onDelete={(p) => setModal({ mode: "delete-product", data: p })}
+                    />
                 </main>
+                 {drawerProduct && (
+                  <ProductDrawer
+                    product={drawerProduct}
+                    onClose={() => setDrawerProduct(null)}
+                    onEdit={(p) => { setDrawerProduct(null); setModal({ mode: "edit-product", data: p }); }}
+                    onDelete={(p) => { setDrawerProduct(null); setModal({ mode: "delete-product", data: p }); }}
+                  />
+                )}
             </div>
+            
+            {modal?.mode === 'edit-product' && (
+                <ProductModal
+                  product={modal.data}
+                  onClose={() => setModal(null)}
+                  onSave={upsertProduct}
+                  categories={categories}
+                  settings={settings}
+                />
+            )}
+
+            {modal?.mode === 'delete-product' && (
+                <ConfirmModal
+                  title="Видалити товар з сайту?"
+                  description={`Ви впевнені, що хочете видалити '${modal.data.name}'? Цю дію неможливо скасувати.`}
+                  onCancel={() => setModal(null)}
+                  onConfirm={() => deleteProducts([modal.data.id])}
+                  confirmLabel="Видалити"
+                />
+            )}
         </SidebarProvider>
     );
 }
