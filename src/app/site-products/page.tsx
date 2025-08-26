@@ -24,10 +24,10 @@ function SiteProductsPage() {
     // Or, we can lift the state up to a shared context if needed later.
     const [settings, setSettings] = useState<DBSettings>({
         host: "", port: 0, username: "", password: "", database: "tovar.db",
-        mysqlHost: process.env.NEXT_PUBLIC_MYSQL_HOST || "91.226.178.53",
-        mysqlUser: process.env.NEXT_PUBLIC_MYSQL_USER || "vate_vaterpas",
-        mysqlPassword: process.env.NEXT_PUBLIC_MYSQL_PASSWORD || "!1205Zhekaaa",
-        mysqlDatabase: process.env.NEXT_PUBLIC_MYSQL_DATABASE || "vate_vaterpas",
+        mysqlHost: process.env.NEXT_PUBLIC_MYSQL_HOST || "",
+        mysqlUser: process.env.NEXT_PUBLIC_MYSQL_USER || "",
+        mysqlPassword: process.env.NEXT_PUBLIC_MYSQL_PASSWORD || "",
+        mysqlDatabase: process.env.NEXT_PUBLIC_MYSQL_DATABASE || "",
     });
 
     const [products, setProducts] = useState<SiteProduct[]>([]);
