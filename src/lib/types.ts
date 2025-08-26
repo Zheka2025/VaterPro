@@ -1,3 +1,4 @@
+
 export type ProductAttribute = {
   [key: string]: string | number;
 };
@@ -16,6 +17,14 @@ export type Product = {
   attributes: ProductAttribute;
   createdAt: string;
 };
+
+export type SiteProduct = {
+    id: number;
+    name: string;
+    price: number | string;
+    stock: number;
+    imageUrl: string | null;
+}
 
 export type Category = {
   id: string;
@@ -39,6 +48,10 @@ export type DBSettings = {
   password?: string;
   database: string;
   azureConnString?: string;
+  mysqlHost?: string;
+  mysqlUser?: string;
+  mysqlPassword?: string;
+  mysqlDatabase?: string;
 };
 
 export type DBTable = {

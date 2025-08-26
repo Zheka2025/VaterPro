@@ -6,10 +6,11 @@ import { generateSql } from '@/ai/flows/generate-sql';
 import type { GenerateProductDescriptionInput } from '@/ai/schemas';
 import type { GenerateSqlInput } from '@/ai/schemas';
 import { initialProducts } from '@/lib/constants';
-import type { DBSettings, Product } from '@/lib/types';
+import type { DBSettings, Product, SiteProduct } from '@/lib/types';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import path from 'path';
+import mysql from 'mysql2/promise';
 
 const mockDelay = (ms = 500) => new Promise((r) => setTimeout(r, ms));
 
@@ -169,4 +170,33 @@ export async function getDbProductCount(): Promise<number> {
       await db.close();
     }
   }
+}
+
+export async function getSiteProducts(settings: DBSettings): Promise<SiteProduct[]> {
+    if (!settings.mysqlHost || !settings.mysqlUser || !settings.mysqlDatabase) {
+        throw new Error("MySQL connection details are not configured.");
+    }
+    let connection;
+    try {
+        connection = await mysql.createConnection({
+            host: settings.mysqlHost,
+            user: settings.mysqlUser,
+            password: settings.mysqlPassword,
+            database: settings.mysqlDatabase,
+        });
+
+        const [rows] = await connection.execute('SELECT id, name, price, stock, imageUrl FROM product ORDER BY updatedAt DESC LIMIT 100');
+        
+        // The result from mysql2 is an array of objects. We need to cast it to SiteProduct[].
+        // We assume the column names match the SiteProduct properties.
+        return rows as SiteProduct[];
+
+    } catch (error: any) {
+        console.error("MYSQL_CONNECTION_ERROR:", error);
+        throw new Error(`Failed to connect to MySQL or fetch data: ${error.message}`);
+    } finally {
+        if (connection) {
+            await connection.end();
+        }
+    }
 }

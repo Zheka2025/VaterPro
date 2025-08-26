@@ -28,6 +28,28 @@ export function DashboardSidebar({ connection, tables, activeSection, setActiveS
       console.error("Logout error", error);
     }
   };
+  
+  const renderDbTable = (table: DBTable) => {
+    // Special link for the main 'product' table to go to the new page
+    if (table.name === 'product') {
+      return (
+        <Link href="/site-products" passHref>
+            <SidebarMenuButton variant="ghost" className="h-8 justify-start" tooltip={table.label}>
+                <Database size={16} className="text-muted-foreground"/>
+                <span>{table.label}</span>
+            </SidebarMenuButton>
+        </Link>
+      );
+    }
+
+    // Default button for other tables
+    return (
+        <SidebarMenuButton variant="ghost" className="h-8 justify-start" tooltip={table.label}>
+            <Database size={16} className="text-muted-foreground"/>
+            <span>{table.label}</span>
+        </SidebarMenuButton>
+    )
+  }
 
   return (
     <Sidebar side="left" collapsible="icon" className="border-r">
@@ -74,10 +96,7 @@ export function DashboardSidebar({ connection, tables, activeSection, setActiveS
             <SidebarMenu>
             {tables.map((table) => (
                 <SidebarMenuItem key={table.name}>
-                    <SidebarMenuButton variant="ghost" className="h-8 justify-start" tooltip={table.label}>
-                        <Database size={16} className="text-muted-foreground"/>
-                        <span>{table.label}</span>
-                    </SidebarMenuButton>
+                    {renderDbTable(table)}
                 </SidebarMenuItem>
             ))}
             </SidebarMenu>

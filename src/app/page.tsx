@@ -32,7 +32,11 @@ function Dashboard() {
     username: "", 
     password: "", 
     database: "tovar.db", 
-    azureConnString: "" 
+    azureConnString: "",
+    mysqlHost: process.env.NEXT_PUBLIC_MYSQL_HOST || "",
+    mysqlUser: process.env.NEXT_PUBLIC_MYSQL_USER || "",
+    mysqlPassword: process.env.NEXT_PUBLIC_MYSQL_PASSWORD || "",
+    mysqlDatabase: process.env.NEXT_PUBLIC_MYSQL_DATABASE || "",
   });
   const [conn, setConn] = useState<ConnectionState>({ status: "idle", message: "" });
   const [tables, setTables] = useState<DBTable[]>([]);
@@ -148,12 +152,13 @@ function Dashboard() {
   }
 
   const handleReconnect = async (newSettings: DBSettings) => {
+    // For now, we only reconnect to the mock DB. MySQL connection is handled separately.
     setConn({ status: "connecting", message: "Підключення…" });
     try {
       const res = await connectToDb(newSettings);
       setConn({ status: "connected", message: res.version });
       setTables(res.tables);
-      setSettings(newSettings);
+      setSettings(newSettings); // Save all settings
       setModal(null);
        toast({
         title: "Налаштування збережено",
