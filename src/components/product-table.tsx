@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -60,7 +61,7 @@ export function ProductTable({ products, selectedIds, onSelect, onSelectAll, onV
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Image
-                      src={p.images?.[0] || 'https://placehold.co/600x400.png'}
+                      src={p.images && p.images[0] ? p.images[0] : 'https://placehold.co/600x400.png'}
                       alt={p.name}
                       width={48}
                       height={48}
