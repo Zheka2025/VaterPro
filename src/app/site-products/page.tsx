@@ -110,7 +110,7 @@ function SiteProductsPage() {
                                                 <TableRow key={p.id}>
                                                     <TableCell>
                                                         <Image
-                                                            src={p.imageUrl ? p.imageUrl : `https://placehold.co/600x400.png?text=${p.name.charAt(0)}`}
+                                                            src={`https://placehold.co/600x400.png?text=${p.name.charAt(0)}`}
                                                             alt={p.name}
                                                             width={48}
                                                             height={48}
