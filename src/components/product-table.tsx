@@ -59,19 +59,9 @@ export function ProductTable({ products, selectedIds, onSelect, onSelectAll, onV
                   />
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Image
-                      src={p.images?.[0] ? p.images[0] : 'https://placehold.co/600x400.png'}
-                      alt={p.name}
-                      width={48}
-                      height={48}
-                      className="w-12 h-12 rounded-lg object-cover border bg-card"
-                      data-ai-hint={p.category === 'Електроінструмент' ? 'power drill' : p.category === 'Фарби та лаки' ? 'paint can' : p.category === 'Сантехніка' ? 'faucet sink' : 'power outlet'}
-                    />
-                    <div>
-                      <div className="font-medium">{p.name}</div>
-                      <div className="text-xs text-muted-foreground">ID: {p.id}</div>
-                    </div>
+                  <div>
+                    <div className="font-medium">{p.name}</div>
+                    <div className="text-xs text-muted-foreground">ID: {p.id}</div>
                   </div>
                 </TableCell>
                 <TableCell>{p.sku}</TableCell>
