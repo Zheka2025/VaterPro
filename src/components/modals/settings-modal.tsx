@@ -63,16 +63,6 @@ export function SettingsModal({ settings, onClose, onSave }: Props) {
                 </div>
              </div>
           </div>
-
-          <Separator />
-          
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Зберігання зображень</h3>
-             <div className="col-span-2">
-              <Label htmlFor="azureConnString">Azure Storage (connection string)</Label>
-              <Input id="azureConnString" value={s.azureConnString} onChange={(e) => set("azureConnString", e.target.value)} />
-            </div>
-          </div>
           
         </div>
         <DialogFooter>
