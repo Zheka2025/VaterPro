@@ -129,9 +129,9 @@ export async function getProductsByName(nameQuery: string): Promise<Partial<Prod
       mode: sqlite3.OPEN_READONLY,
     });
     
-    // Using LOWER() on both the column and the query to ensure case-insensitive search
+    // Simplified LIKE query, case-filtering will be done on the client.
     const products = await db.all(
-      "SELECT NAME, PRODUCT_ID FROM tovar WHERE LOWER(NAME) LIKE LOWER(?) LIMIT 10",
+      "SELECT NAME, PRODUCT_ID FROM tovar WHERE NAME LIKE ? LIMIT 100", // Increased limit to get more results for client-side filtering
        [`%${nameQuery}%`]
     );
 

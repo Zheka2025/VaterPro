@@ -179,14 +179,20 @@ function BulkAddPage() {
   
   const handleNameSearch = (query: string) => {
     setNameQuery(query);
-    if (!query.trim() || query.length < 2) {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery || trimmedQuery.length < 2) {
         setNameSearchResults([]);
         return;
     }
     startNameSearchTransition(async () => {
         try {
-            const results = await getProductsByName(query);
-            setNameSearchResults(results);
+            const results = await getProductsByName(trimmedQuery);
+            // GUARANTEED case-insensitive filtering on the client-side
+            const lowerCaseQuery = trimmedQuery.toLowerCase();
+            const filteredResults = results
+              .filter(p => p.name?.toLowerCase().includes(lowerCaseQuery))
+              .slice(0, 10); // Limit results after filtering
+            setNameSearchResults(filteredResults);
         } catch (e: any) {
              toast({
                 variant: "destructive",
